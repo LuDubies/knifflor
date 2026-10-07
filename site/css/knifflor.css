@@ -84,9 +84,20 @@ body {
   left: 0;
   z-index: 2;
   background-color: var(--bs-body-bg);
-  min-width: 8.5rem;
+  /* nie breiter als 30 % des Bildschirms; min-width muss mitgedeckelt
+     werden, weil es sonst gegen max-width gewinnt */
+  min-width: min(8.5rem, 30vw);
+  max-width: 30vw;
   text-align: left;
   font-weight: 500;
+  /*
+   * Nichts darf aus der Spalte herausragen. 'anywhere' statt 'break-word',
+   * weil nur 'anywhere' auch die Mindestbreite der Tabellenspalte senkt -
+   * sonst zieht der Tabellenalgorithmus die Spalte am laengsten Wort auf.
+   * hyphens greift vorher, wo lang="de" eine Trennstelle hergibt.
+   */
+  overflow-wrap: anywhere;
+  hyphens: auto;
   /* trennt die feststehende Spalte sichtbar vom scrollenden Rest */
   box-shadow: inset -1px 0 0 var(--bs-border-color);
 }
@@ -94,6 +105,8 @@ body {
 .sheet-name {
   display: block;
   line-height: 1.2;
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 
 .sheet-hint {
@@ -101,10 +114,13 @@ body {
   font-size: 0.7rem;
   font-weight: 400;
   color: var(--bs-secondary-color);
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 
 .sheet .sheet-game {
-  min-width: 6rem;
+  min-width: min(6rem, 30vw);
+  max-width: 30vw;
   text-align: center;
 }
 
@@ -206,12 +222,99 @@ select.score-input {
   font-weight: 700;
 }
 
+/* Kopf einer klappbaren Spalte: Beschriftung und Griff nebeneinander. */
+.edge-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+/* Links sitzt der Griff aussen, die Beschriftung schliesst direkt an. */
+.edge-head-left {
+  justify-content: flex-start;
+}
+
+.edge-toggle {
+  flex: none;
+  border: 0;
+  background: none;
+  color: var(--bs-secondary-color);
+  font-size: 1.25rem;
+  line-height: 1;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  /* ausreichend grosse Trefferflaeche fuer den Daumen */
+  min-width: 2rem;
+  min-height: 2.25rem;
+}
+
+.edge-toggle:hover,
+.edge-toggle:focus-visible {
+  color: var(--knifflor-accent);
+  background-color: var(--bs-tertiary-bg);
+}
+
+/*
+ * Eingeklappt bleibt rechts nur ein schmaler Streifen stehen. Er behaelt
+ * sheet-overall, damit er weiter klebt und denselben Hintergrund hat.
+ */
+.sheet .sheet-overall-collapsed {
+  width: 2.5rem;
+  min-width: 2.5rem;
+  padding-left: 0;
+  padding-right: 0;
+  text-align: center;
+}
+
+/*
+ * Links schrumpft die Kategoriespalte auf Symbolbreite. min-width muss hier
+ * mit zurueckgenommen werden, sonst gewinnt es gegen die kleinere Breite.
+ */
+.sheet .sheet-label-collapsed {
+  width: 3rem;
+  min-width: 3rem;
+  max-width: 3rem;
+  padding-left: 0;
+  padding-right: 0;
+  text-align: center;
+}
+
+.sheet-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.5rem;
+  color: var(--bs-body-color);
+}
+
+.sheet-icon svg {
+  display: block;
+  width: 1.3rem;
+  height: 1.3rem;
+  fill: currentColor;
+}
+
+.sheet-abbr {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.sheet-total .sheet-icon {
+  color: var(--bs-body-color);
+}
+
+.sheet-total-grand .sheet-icon {
+  color: var(--knifflor-accent);
+}
+
 @media (min-width: 768px) {
   .sheet .sheet-label {
-    min-width: 11rem;
+    min-width: min(11rem, 30vw);
   }
 
   .sheet .sheet-game {
-    min-width: 7rem;
+    min-width: min(7rem, 30vw);
   }
 }

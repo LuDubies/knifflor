@@ -94,6 +94,12 @@
    */
   let showHistory = false;
 
+  /** Ebenfalls reine Ansicht: blendet die Gesamtspalte rechts aus. */
+  let showOverall = true;
+
+  /** Eingeklappt zeigt die Kategoriespalte statt Text nur noch Symbole. */
+  let showLabels = true;
+
   /** Nur das jüngste Spiel ist offen, alles davor ist abgeschlossen. */
   const activeIndex = () => session.games.length - 1;
   const isLocked = (index) => index < activeIndex();
@@ -180,6 +186,110 @@
   }
 
   let session = loadSession() ?? newSession();
+
+  // --------------------------------------------------------------- Symbole
+
+  /*
+   * Zeichen für die eingeklappte Kategoriespalte. Bewusst in der Bildsprache
+   * des Spiels: Würfelaugen für den oberen Block, Augengruppen und Treppen
+   * für den unteren. Der volle Name steht als title an der Zelle.
+   */
+
+  const pip = (x, y) => '<circle cx="' + x + '" cy="' + y + '" r="1.9"/>';
+
+  const svg = (inner) =>
+    '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + inner + '</svg>';
+
+  const DIE_PIPS = {
+    1: [[12, 12]],
+    2: [[8, 8], [16, 16]],
+    3: [[8, 8], [12, 12], [16, 16]],
+    4: [[8, 8], [16, 8], [8, 16], [16, 16]],
+    5: [[8, 8], [16, 8], [12, 12], [8, 16], [16, 16]],
+    6: [[8, 8], [16, 8], [8, 12], [16, 12], [8, 16], [16, 16]],
+  };
+
+  const dieIcon = (face) =>
+    svg(
+      '<rect x="3" y="3" width="18" height="18" rx="4.5" fill="none" ' +
+        'stroke="currentColor" stroke-width="1.6"/>' +
+        DIE_PIPS[face].map(([x, y]) => pip(x, y)).join(''),
+    );
+
+  /**
+   * Augengruppe ohne Würfelrand - für Dreier- und Viererpasch. Die
+   * Anordnung vom Würfel übernommen: drei liegen diagonal, vier im
+   * Quadrat. Als Reihe nebeneinander wären 3 und 4 kaum zu unterscheiden.
+   */
+  const groupIcon = (count) =>
+    svg(DIE_PIPS[count].map(([x, y]) => '<circle cx="' + x + '" cy="' + y + '" r="2.6"/>').join(''));
+
+  /**
+   * Full House: fünf Augen auf den Ecken vom Haus vom Nikolaus - Giebel
+   * oben, darunter das Quadrat. Nur die Punkte, keine Linien, damit es zu
+   * den übrigen Augensymbolen passt.
+   */
+  const fullHouseIcon = () =>
+    svg(
+      [
+        [12, 2.9], // Giebelspitze
+        [6.2, 9.7], // Quadrat: 11.6 x 11.6, damit es nicht gedrungen wirkt
+        [17.8, 9.7],
+        [6.2, 21.3],
+        [17.8, 21.3],
+      ]
+        .map(([x, y]) => '<circle cx="' + x + '" cy="' + y + '" r="2.4"/>')
+        .join(''),
+    );
+
+  /** Aufsteigende Treppe - kleine und große Straße. */
+  const stairsIcon = (count) => {
+    const width = 3;
+    const gap = (19 - count * width) / (count - 1);
+    let inner = '';
+    for (let i = 0; i < count; i += 1) {
+      const height = 5 + i * (14 / (count - 1));
+      const x = 2 + i * (width + gap);
+      inner +=
+        '<rect x="' + x.toFixed(1) + '" y="' + (21 - height).toFixed(1) + '" width="' + width +
+        '" height="' + height.toFixed(1) + '" rx="1"/>';
+    }
+    return svg(inner);
+  };
+
+  const starIcon = () =>
+    svg('<path d="M12 3l2.6 5.9 6.4.6-4.8 4.3 1.4 6.3L12 17l-5.6 3.1 1.4-6.3L3 9.5l6.4-.6z"/>');
+
+  const glyphIcon = (text) =>
+    svg(
+      '<text x="12" y="18" text-anchor="middle" font-size="17" font-weight="700" ' +
+        'fill="currentColor">' + text + '</text>',
+    );
+
+  const FIELD_ICONS = {
+    einser: dieIcon(1),
+    zweier: dieIcon(2),
+    dreier: dieIcon(3),
+    vierer: dieIcon(4),
+    fuenfer: dieIcon(5),
+    sechser: dieIcon(6),
+    dreierpasch: groupIcon(3),
+    viererpasch: groupIcon(4),
+    fullHouse: fullHouseIcon(),
+    kleineStrasse: stairsIcon(4),
+    grosseStrasse: stairsIcon(5),
+    kniffel: starIcon(),
+    chance: glyphIcon('?'),
+  };
+
+  /** Summenzeilen bekommen Kürzel statt Bildern - sie sind ohnehin abgesetzt. */
+  const TOTAL_ABBR = {
+    upperSum: 'ZS',
+    bonus: '+' + BONUS_VALUE,
+    upperTotal: 'OB',
+    lowerTotal: 'UB',
+    grandTotal: 'Σ',
+  };
 
   // ----------------------------------------------------------- Darstellung
 
@@ -279,6 +389,8 @@
   }
 
   function labelCell(field) {
+    if (!showLabels) return iconLabelCell(field.label, FIELD_ICONS[field.key], '?');
+
     const cell = el('th', 'sheet-label');
     cell.scope = 'row';
     cell.append(el('span', 'sheet-name', field.label));
@@ -299,12 +411,48 @@
     return cell;
   }
 
+  /** Schmale Platzhalterzelle, solange die Gesamtspalte eingeklappt ist. */
+  function collapsedCell() {
+    return el('td', 'sheet-overall sheet-overall-collapsed');
+  }
+
+  /**
+   * Griff am Spaltenrand. Der Pfeil zeigt dorthin, wohin sich die Spalte
+   * bewegt - zum Rand hin beim Einklappen, zur Mitte beim Ausklappen.
+   */
+  function edgeToggle(target, expanded, name) {
+    const toLeft = target === 'labels';
+    const arrow = expanded === toLeft ? '‹' : '›';
+
+    const button = el('button', 'edge-toggle', arrow);
+    button.type = 'button';
+    button.dataset.toggle = target;
+    button.setAttribute('aria-expanded', String(expanded));
+    button.setAttribute('aria-label', name + (expanded ? ' einklappen' : ' ausklappen'));
+    button.title = button.getAttribute('aria-label');
+    return button;
+  }
+
+  /** Kategoriezelle im eingeklappten Zustand: nur ein Symbol, Name als title. */
+  function iconLabelCell(name, markup, abbr) {
+    const cell = el('th', 'sheet-label sheet-label-collapsed');
+    cell.scope = 'row';
+    cell.title = name;
+
+    const box = el('span', 'sheet-icon');
+    if (markup) box.innerHTML = markup;
+    else box.append(el('span', 'sheet-abbr', abbr));
+    cell.append(box);
+
+    return cell;
+  }
+
   /** Eingabezeile: Kategorie, eine Zelle je Spiel, Summe über alle Spiele. */
   function fieldRow(field) {
     const row = el('tr');
     row.append(labelCell(field));
     for (const index of visibleIndexes()) row.append(fieldCell(field, session.games[index], index));
-    row.append(overallCell('field', field.key));
+    row.append(showOverall ? overallCell('field', field.key) : collapsedCell());
     return row;
   }
 
@@ -313,10 +461,14 @@
     const row = el('tr', variant ? 'sheet-total sheet-total-' + variant : 'sheet-total');
     row.dataset.total = key;
 
-    const head = el('th', 'sheet-label');
-    head.scope = 'row';
-    head.append(el('span', 'sheet-name', label));
-    row.append(head);
+    if (showLabels) {
+      const head = el('th', 'sheet-label');
+      head.scope = 'row';
+      head.append(el('span', 'sheet-name', label));
+      row.append(head);
+    } else {
+      row.append(iconLabelCell(label, null, TOTAL_ABBR[key] ?? 'Σ'));
+    }
 
     for (const index of visibleIndexes()) {
       const cell = el('td', 'sheet-value');
@@ -324,7 +476,7 @@
       row.append(cell);
     }
 
-    row.append(overallCell('total', key));
+    row.append(showOverall ? overallCell('total', key) : collapsedCell());
     return row;
   }
 
@@ -332,10 +484,22 @@
     const thead = el('thead');
     const row = el('tr');
 
-    const corner = el('th', 'sheet-label');
-    corner.scope = 'col';
-    corner.append(el('span', 'sheet-name', 'Kategorie'));
-    row.append(corner);
+    if (showLabels) {
+      const corner = el('th', 'sheet-label');
+      corner.scope = 'col';
+
+      const bar = el('div', 'edge-head edge-head-left');
+      bar.append(edgeToggle('labels', true, 'Kategoriespalte'));
+      bar.append(el('span', 'sheet-name', 'Kategorie'));
+
+      corner.append(bar);
+      row.append(corner);
+    } else {
+      const corner = el('th', 'sheet-label sheet-label-collapsed');
+      corner.scope = 'col';
+      corner.append(edgeToggle('labels', false, 'Kategoriespalte'));
+      row.append(corner);
+    }
 
     for (const index of visibleIndexes()) {
       const cell = el('th', 'sheet-game');
@@ -352,11 +516,24 @@
       row.append(cell);
     }
 
-    const overall = el('th', 'sheet-game sheet-overall');
-    overall.scope = 'col';
-    overall.append(el('span', 'sheet-name', 'Gesamt'));
-    overall.append(el('span', 'sheet-hint', 'alle Spiele'));
-    row.append(overall);
+    if (showOverall) {
+      const overall = el('th', 'sheet-game sheet-overall');
+      overall.scope = 'col';
+
+      const bar = el('div', 'edge-head');
+      const titel = el('div');
+      titel.append(el('span', 'sheet-name', 'Gesamt'));
+      titel.append(el('span', 'sheet-hint', 'alle Spiele'));
+      bar.append(titel, edgeToggle('overall', true, 'Gesamtspalte'));
+
+      overall.append(bar);
+      row.append(overall);
+    } else {
+      const handle = el('th', 'sheet-overall sheet-overall-collapsed');
+      handle.scope = 'col';
+      handle.append(edgeToggle('overall', false, 'Gesamtspalte'));
+      row.append(handle);
+    }
 
     thead.append(row);
     table.append(thead);
@@ -499,6 +676,16 @@
   document.getElementById('show-history')?.addEventListener('change', (event) => {
     showHistory = event.target.checked;
     render(!showHistory);
+  });
+
+  document.getElementById('sheet')?.addEventListener('click', (event) => {
+    const button = event.target.closest('.edge-toggle');
+    if (!button) return;
+
+    if (button.dataset.toggle === 'labels') showLabels = !showLabels;
+    else showOverall = !showOverall;
+
+    render();
   });
 
   document.getElementById('restart')?.addEventListener('click', () => {
