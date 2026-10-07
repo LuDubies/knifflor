@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="knifflor">
+  <!-- Vollflaechiger Grund, damit das Icon auch maskiert (runde/quadratische
+       Zuschnitte auf Android) nicht an den Raendern ausfranst. -->
+  <rect width="512" height="512" fill="#212529"/>
+  <!-- Wuerfel liegt in der sicheren Zone (mittlere 80 %) -->
+  <rect x="120" y="120" width="272" height="272" rx="56" fill="#f4b740"/>
+  <g fill="#212529">
+    <circle cx="182" cy="182" r="26"/>
+    <circle cx="330" cy="182" r="26"/>
+    <circle cx="256" cy="256" r="26"/>
+    <circle cx="182" cy="330" r="26"/>
+    <circle cx="330" cy="330" r="26"/>
+  </g>
+</svg>

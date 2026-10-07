@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="de" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#212529">
+  <title>knifflor</title>
+  <meta name="description" content="Kniffel-Notizen implementiert f&uuml;r Frau leicht ohne Rechnen.">
+
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="knifflor">
+
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/knifflor.css" rel="stylesheet">
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+  <nav class="navbar border-bottom border-secondary-subtle">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center gap-2 me-0" href="./">
+        <span class="brand-die" aria-hidden="true">&#9861;</span>
+        <span class="brand-word">knifflor</span>
+      </a>
+      <span id="status" class="small text-body-secondary ms-auto" role="status" aria-live="polite"></span>
+    </div>
+  </nav>
+
+  <main class="flex-grow-1">
+    <div class="container py-3 py-lg-4">
+
+      <div class="scoreboard d-flex flex-wrap align-items-center gap-3 mb-3">
+        <div class="scoreboard-total">
+          <span class="scoreboard-label">Gesamtpunktestand</span>
+          <span id="overall-total" class="scoreboard-value">0</span>
+        </div>
+        <div id="overall-meta" class="small text-body-secondary"></div>
+        <div class="d-flex flex-wrap gap-2 ms-sm-auto">
+          <button type="button" id="new-game" class="btn btn-primary btn-sm">Neues Spiel</button>
+          <button type="button" id="restart" class="btn btn-outline-danger btn-sm">Neustart</button>
+        </div>
+      </div>
+
+      <div id="sheet" class="sheet-wrap">
+        <noscript>
+          <div class="alert alert-warning mb-0">
+            Der Z&auml;hlblock rechnet im Browser. Bitte JavaScript aktivieren.
+          </div>
+        </noscript>
+      </div>
+
+      <p class="small text-body-secondary mt-3 mb-0">
+        <span class="legend-key">&middot;</span> noch offen &nbsp;
+        <span class="legend-key">&mdash;</span> gestrichen &nbsp;&middot;&nbsp;
+        Nur das letzte Spiel ist &auml;nderbar. &bdquo;Neues Spiel&ldquo; schlie&szlig;t das laufende ab
+        und h&auml;ngt rechts eine neue Spalte an. Summen rechnet knifflor selbst,
+        der Spielstand bleibt als JSON in diesem Browser.
+      </p>
+
+    </div>
+  </main>
+
+  <footer class="py-3 border-top border-secondary-subtle">
+    <div class="container text-center text-body-secondary small">
+      <span class="brand-word">knifflor</span> &middot; Kniffel-Notizen implementiert f&uuml;r Frau leicht ohne Rechnen
+    </div>
+  </footer>
+
+  <script src="js/knifflor.js" defer></script>
+  <script>
+    // Ohne Service Worker läuft die App normal weiter, nur eben nicht offline.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch((err) => {
+          console.warn('knifflor: Service Worker nicht registriert', err);
+        });
+      });
+    }
+  </script>
+</body>
+</html>

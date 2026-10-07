@@ -1,0 +1,217 @@
+:root {
+  --knifflor-accent: #f4b740;
+}
+
+html {
+  /* verhindert, dass iOS Safari beim Drehen die Schrift hochskaliert */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  /* Sicherheitsnetz gegen horizontales Wischen der ganzen Seite */
+  overflow-x: hidden;
+}
+
+/* Rand respektiert die Notch im Querformat */
+.container {
+  padding-left: max(var(--bs-gutter-x, 0.75rem), env(safe-area-inset-left));
+  padding-right: max(var(--bs-gutter-x, 0.75rem), env(safe-area-inset-right));
+}
+
+.brand-word {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.brand-die {
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--knifflor-accent);
+}
+
+.legend-key {
+  font-family: var(--bs-font-monospace);
+  color: var(--knifflor-accent);
+}
+
+/* ----------------------------------------------------------- Punktestand */
+
+.scoreboard-total {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.scoreboard-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--bs-secondary-color);
+}
+
+.scoreboard-value {
+  font-size: 2.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--knifflor-accent);
+}
+
+/* ------------------------------------------------------------- Zählblock */
+
+/*
+ * Der Block scrollt waagerecht, sobald mehrere Spiele eingetragen sind.
+ * Kategorie- und Gesamtspalte bleiben dabei stehen, sonst weiß auf dem Handy
+ * niemand mehr, in welcher Zeile er tippt und wie der Stand gerade ist.
+ */
+.sheet-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sheet {
+  margin-bottom: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.sheet th,
+.sheet td {
+  vertical-align: middle;
+}
+
+.sheet .sheet-label {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background-color: var(--bs-body-bg);
+  min-width: 8.5rem;
+  text-align: left;
+  font-weight: 500;
+  /* trennt die feststehende Spalte sichtbar vom scrollenden Rest */
+  box-shadow: inset -1px 0 0 var(--bs-border-color);
+}
+
+.sheet-name {
+  display: block;
+  line-height: 1.2;
+}
+
+.sheet-hint {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--bs-secondary-color);
+}
+
+.sheet .sheet-game {
+  min-width: 6rem;
+  text-align: center;
+}
+
+.sheet .sheet-game.is-active .sheet-name {
+  color: var(--knifflor-accent);
+}
+
+.sheet .sheet-game.is-locked .sheet-name {
+  color: var(--bs-secondary-color);
+  font-weight: 500;
+}
+
+.sheet thead .sheet-label,
+.sheet thead .sheet-overall {
+  z-index: 3;
+}
+
+/* ----------------------------------------------- abgeschlossene Spiele */
+
+.sheet .sheet-locked {
+  text-align: center;
+}
+
+.score-locked {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  /* gleiche Höhe wie ein Eingabefeld, damit die Zeilen nicht springen */
+  line-height: 2.75rem;
+}
+
+/* ------------------------------------------------------------- Eingaben */
+
+/*
+ * 16px verhindert, dass iOS beim Antippen eines Feldes hineinzoomt.
+ * Bootstraps form-*-sm liegt mit 0.875rem knapp darunter.
+ */
+.score-input {
+  font-size: 16px;
+  text-align: center;
+  min-height: 2.75rem;
+}
+
+select.score-input {
+  /* Platz für den Pfeil, sonst überlappt er die Zahl */
+  padding-right: 1.75rem;
+}
+
+/* --------------------------------------------------- berechnete Zeilen */
+
+.sheet .sheet-value {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.sheet-total .sheet-label,
+.sheet-total .sheet-value {
+  background-color: var(--bs-tertiary-bg);
+}
+
+.sheet-total-section .sheet-label,
+.sheet-total-section .sheet-value {
+  background-color: var(--bs-secondary-bg);
+}
+
+.sheet-total-grand .sheet-label,
+.sheet-total-grand .sheet-value {
+  background-color: var(--bs-secondary-bg);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--knifflor-accent);
+}
+
+.bonus-reached {
+  color: var(--knifflor-accent);
+}
+
+.is-best {
+  text-decoration: underline;
+  text-decoration-color: var(--knifflor-accent);
+  text-underline-offset: 0.25rem;
+}
+
+/* --------------------------------------------------------- Gesamtspalte */
+
+/*
+ * Steht am rechten Rand fest. Muss nach den Summenzeilen stehen, sonst
+ * gewinnt deren Hintergrund und die Spalte wird beim Scrollen durchsichtig.
+ */
+.sheet .sheet-overall {
+  position: sticky;
+  right: 0;
+  z-index: 2;
+  background-color: var(--bs-secondary-bg);
+  box-shadow: inset 1px 0 0 var(--bs-border-color);
+}
+
+.sheet td.sheet-overall {
+  font-weight: 700;
+}
+
+@media (min-width: 768px) {
+  .sheet .sheet-label {
+    min-width: 11rem;
+  }
+
+  .sheet .sheet-game {
+    min-width: 7rem;
+  }
+}
