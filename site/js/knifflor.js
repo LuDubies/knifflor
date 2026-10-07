@@ -88,9 +88,23 @@
     };
   }
 
+  /**
+   * Reine Ansichtssache: gehört nicht in den Spielstand und wird nicht
+   * wiederhergestellt. Jeder Aufruf startet ohne Verlauf.
+   */
+  let showHistory = false;
+
   /** Nur das jüngste Spiel ist offen, alles davor ist abgeschlossen. */
   const activeIndex = () => session.games.length - 1;
   const isLocked = (index) => index < activeIndex();
+
+  /**
+   * Welche Spalten der Block zeigt. Ohne Verlauf bleibt nur das laufende
+   * Spiel stehen; gerechnet wird trotzdem über alle, die Gesamtspalte und
+   * der Punktestand oben bleiben also vollständig.
+   */
+  const visibleIndexes = () =>
+    showHistory ? session.games.map((_, index) => index) : [activeIndex()];
 
   // ------------------------------------------------------------- Speichern
 
@@ -289,7 +303,7 @@
   function fieldRow(field) {
     const row = el('tr');
     row.append(labelCell(field));
-    session.games.forEach((game, index) => row.append(fieldCell(field, game, index)));
+    for (const index of visibleIndexes()) row.append(fieldCell(field, session.games[index], index));
     row.append(overallCell('field', field.key));
     return row;
   }
@@ -304,7 +318,7 @@
     head.append(el('span', 'sheet-name', label));
     row.append(head);
 
-    for (let index = 0; index < session.games.length; index += 1) {
+    for (const index of visibleIndexes()) {
       const cell = el('td', 'sheet-value');
       cell.dataset.game = String(index);
       row.append(cell);
@@ -323,7 +337,7 @@
     corner.append(el('span', 'sheet-name', 'Kategorie'));
     row.append(corner);
 
-    for (let index = 0; index < session.games.length; index += 1) {
+    for (const index of visibleIndexes()) {
       const cell = el('th', 'sheet-game');
       cell.scope = 'col';
       cell.append(el('span', 'sheet-name', 'Spiel ' + (index + 1)));
@@ -382,9 +396,10 @@
       const row = document.querySelector('[data-total="' + key + '"]');
       if (!row) continue;
 
-      session.games.forEach((game, index) => {
+      for (const index of visibleIndexes()) {
+        const game = session.games[index];
         const cell = row.querySelector('[data-game="' + index + '"]');
-        if (!cell) return;
+        if (!cell) continue;
 
         const value = compute(game);
         cell.textContent = String(value);
@@ -395,9 +410,11 @@
           cell.classList.toggle('bonus-reached', value > 0);
         }
         if (key === 'grandTotal') {
-          cell.classList.toggle('is-best', session.games.length > 1 && best > 0 && value === best);
+          // Ohne Verlauf gibt es nichts zu vergleichen.
+          const compare = showHistory && session.games.length > 1;
+          cell.classList.toggle('is-best', compare && best > 0 && value === best);
         }
-      });
+      }
 
       const overall = row.querySelector('[data-overall="total"]');
       if (overall) {
@@ -477,6 +494,11 @@
     session.games.push(newGame());
     saveSession();
     render(true);
+  });
+
+  document.getElementById('show-history')?.addEventListener('change', (event) => {
+    showHistory = event.target.checked;
+    render(!showHistory);
   });
 
   document.getElementById('restart')?.addEventListener('click', () => {

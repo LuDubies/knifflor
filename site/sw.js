@@ -8,7 +8,7 @@
  * WICHTIG: Bei jedem Deployment CACHE_NAME hochzählen. Sonst behalten
  * Geräte, die schon einmal da waren, die alte Version.
  */
-const CACHE_NAME = 'knifflor-v1';
+const CACHE_NAME = 'knifflor-v2';
 
 const ASSETS = [
   './',

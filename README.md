@@ -19,9 +19,20 @@ App läuft also auch in einem Unterverzeichnis.
 Läuft auf http://127.0.0.1:5000. Über `KNIFFLOR_HOST` und `KNIFFLOR_PORT`
 anpassbar.
 
-Achtung: Der Service Worker braucht HTTPS oder `localhost`. Ruft man den
-Server vom Handy über die LAN-IP auf, registriert er sich nicht - die App
-funktioniert dann, aber ohne Offline-Modus.
+Auf `localhost` und `127.0.0.1` registriert sich der Service Worker
+absichtlich **nicht**, und ein bereits installierter wird beim nächsten
+Aufruf samt Caches abgeräumt. Sonst würde er beim Entwickeln aus dem Cache
+ausliefern und jede Änderung verstecken.
+
+Die PWA lokal testen geht mit `?sw=1`:
+
+    http://127.0.0.1:5000/?sw=1
+
+Danach einmal ohne den Parameter aufrufen, um wieder aufzuräumen.
+
+Vom Handy über die LAN-IP gibt es ohnehin keinen Service Worker - der
+braucht HTTPS oder `localhost`. Die App funktioniert dort, nur ohne
+Offline-Modus.
 
 ## Deployen
 
