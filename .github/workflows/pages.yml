@@ -1,0 +1,54 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Ein Deployment zur Zeit. Laufende Deployments werden nicht abgebrochen,
+# damit ein halb hochgeladenes Artefakt nicht live geht.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache-Version auf den Commit setzen
+        run: |
+          set -euo pipefail
+
+          # Schlaegt absichtlich fehl, wenn die Zeile mal umbenannt wird -
+          # ein stilles Durchrutschen wuerde Geraete auf der alten Version
+          # festhalten, und das faellt erst beim Nutzer auf.
+          grep -q "^const CACHE_NAME = " site/sw.js || {
+            echo "::error file=site/sw.js::Zeile 'const CACHE_NAME = ...' nicht gefunden"
+            exit 1
+          }
+
+          VERSION="knifflor-${GITHUB_SHA::7}"
+          sed -i "s|^const CACHE_NAME = .*|const CACHE_NAME = '${VERSION}';|" site/sw.js
+
+          echo "Cache-Version: ${VERSION}"
+          grep -n "^const CACHE_NAME" site/sw.js
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

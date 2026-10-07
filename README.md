@@ -36,10 +36,24 @@ HTTPS ist Pflicht, sonst gibt es keinen Service Worker und keine
 Installation auf dem Startbildschirm. Alle genannten Hoster liefern das
 automatisch mit.
 
-### Nach jeder Änderung
+### GitHub Pages
 
-In `site/sw.js` `CACHE_NAME` hochzählen (`knifflor-v1` → `knifflor-v2`).
-Ohne das behalten Geräte, die schon einmal da waren, die alte Version.
+`.github/workflows/pages.yml` veröffentlicht `site/` bei jedem Push auf
+`main`. Einmalig in *Settings → Pages* als Source **GitHub Actions** wählen -
+ohne diesen Schritt läuft der Workflow, aber nichts geht live.
+
+### Cache-Version
+
+Der Service Worker liefert aus dem Cache, solange `CACHE_NAME` gleich
+bleibt. Geräte, die schon einmal da waren, bekämen sonst ewig die alte
+Version.
+
+Der Workflow erledigt das selbst: er setzt `CACHE_NAME` vor dem Hochladen
+auf `knifflor-<commit>`. Die Datei im Repo bleibt dabei unverändert, nur das
+veröffentlichte Artefakt wird angepasst.
+
+Beim Deployen von Hand auf einen anderen Hoster musst du `CACHE_NAME` in
+`site/sw.js` selbst hochzählen.
 
 ## PWA
 
